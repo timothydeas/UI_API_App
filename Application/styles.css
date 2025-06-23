@@ -1,0 +1,62 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  text-align: center;
+  margin: 20px 0;
+}
+
+#app-container {
+  display: flex;
+  height: calc(100vh - 80px);
+  gap: 20px;
+  padding: 0 20px 20px 20px;
+  box-sizing: border-box;
+}
+
+#property-list, #json-container {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow-y: auto;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+#property-list {
+  width: 40%;
+}
+
+#json-container {
+  width: 60%;
+  white-space: pre-wrap;
+  background-color: black;
+  font-family: monospace;
+  font-size: 14px;
+  position: relative;
+  color: white;
+}
+
+.property-item {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.clickable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.3s ease;
+}
+
+.clickable:hover {
+  color: #0078d7;
+}
+
+.highlighted {
+  background-color: yellow;
+  font-weight: bold;
+  color: black;
+}

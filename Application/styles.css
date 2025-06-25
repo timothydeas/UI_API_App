@@ -60,3 +60,23 @@ h1 {
   font-weight: bold;
   color: black;
 }
+.collapsible {
+  font-weight: bold;
+  color: #4da6ff;
+  cursor: pointer;
+}
+
+.collapsible.expanded {
+  color: white;
+  white-space: pre-wrap;
+  display: block;
+}
+
+.collapsible.collapsed:hover {
+  text-decoration: underline;
+}
+
+.json-preview-block {
+  margin-bottom: 20px;
+}
+

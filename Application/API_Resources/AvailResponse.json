@@ -500,7 +500,7 @@
                     [
                       {
                         "type": "base_rate",
-                        "value": "309.00",
+                        "value": "420.00",
                         "currency": "CAD"
                       },
                       {
@@ -512,7 +512,7 @@
                     [
                       {
                         "type": "base_rate",
-                        "value": "309.00",
+                        "value": "420.00",
                         "currency": "CAD"
                       },
                       {
@@ -532,7 +532,7 @@
                   "totals": {
                     "inclusive": {
                       "billable_currency": {
-                        "value": "702.00",
+                        "value": "930.00",
                         "currency": "CAD"
                       },
                       "request_currency": {
@@ -602,7 +602,7 @@
                     },
                     "minimum_selling_price": {
                       "billable_currency": {
-                        "value": "702.00",
+                        "value": "930.00",
                         "currency": "CAD"
                       },
                       "request_currency": {
@@ -659,7 +659,7 @@
                     [
                       {
                         "type": "base_rate",
-                        "value": "309.00",
+                        "value": "420.00",
                         "currency": "CAD"
                       },
                       {
@@ -671,7 +671,7 @@
                     [
                       {
                         "type": "base_rate",
-                        "value": "309.00",
+                        "value": "420.00",
                         "currency": "CAD"
                       },
                       {
@@ -691,7 +691,7 @@
                   "totals": {
                     "inclusive": {
                       "billable_currency": {
-                        "value": "702.00",
+                        "value": "930.00",
                         "currency": "CAD"
                       },
                       "request_currency": {
@@ -741,7 +741,7 @@
                     },
                     "minimum_selling_price": {
                       "billable_currency": {
-                        "value": "702.00",
+                        "value": "930.00",
                         "currency": "CAD"
                       },
                       "request_currency": {
@@ -919,7 +919,7 @@
                     [
                       {
                         "type": "base_rate",
-                        "value": "309.00",
+                        "value": "510.00",
                         "currency": "CAD"
                       },
                       {
@@ -931,7 +931,7 @@
                     [
                       {
                         "type": "base_rate",
-                        "value": "309.00",
+                        "value": "510.00",
                         "currency": "CAD"
                       },
                       {
@@ -951,7 +951,7 @@
                   "totals": {
                     "inclusive": {
                       "billable_currency": {
-                        "value": "702.00",
+                        "value": "640.00",
                         "currency": "CAD"
                       },
                       "request_currency": {
@@ -1021,7 +1021,7 @@
                     },
                     "minimum_selling_price": {
                       "billable_currency": {
-                        "value": "702.00",
+                        "value": "640.00",
                         "currency": "CAD"
                       },
                       "request_currency": {
@@ -1078,7 +1078,7 @@
                     [
                       {
                         "type": "base_rate",
-                        "value": "309.00",
+                        "value": "510.00",
                         "currency": "CAD"
                       },
                       {
@@ -1090,7 +1090,7 @@
                     [
                       {
                         "type": "base_rate",
-                        "value": "309.00",
+                        "value": "510.00",
                         "currency": "CAD"
                       },
                       {
@@ -1110,7 +1110,7 @@
                   "totals": {
                     "inclusive": {
                       "billable_currency": {
-                        "value": "702.00",
+                        "value": "640.00",
                         "currency": "CAD"
                       },
                       "request_currency": {
@@ -1160,7 +1160,7 @@
                     },
                     "minimum_selling_price": {
                       "billable_currency": {
-                        "value": "702.00",
+                        "value": "640.00",
                         "currency": "CAD"
                       },
                       "request_currency": {

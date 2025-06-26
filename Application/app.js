@@ -2,6 +2,7 @@ let AvailResponse = null;
 
 const propertyList = document.getElementById('property-list');
 const jsonContainer = document.getElementById('json-container');
+const backButton = document.getElementById('back-to-main');
 
 fetch('API_Resources/AvailResponse.json')
   .then(response => {
@@ -11,7 +12,7 @@ fetch('API_Resources/AvailResponse.json')
   .then(data => {
     AvailResponse = data;
     createPropertyList(AvailResponse, propertyList);
-    renderCollapsedJsonList(data); // show summary list on load
+    renderCollapsedJsonList(AvailResponse);
   })
   .catch(console.error);
 
@@ -22,16 +23,18 @@ function clearHighlights() {
 
 function scrollToTop() {
   jsonContainer.scrollTop = 0;
+  propertyList.scrollTop = 0;
 }
 
 function renderJson(jsonData) {
   clearHighlights();
   jsonContainer.textContent = JSON.stringify(jsonData, null, 2);
-  scrollToTop();
+  backButton.style.display = 'inline-block';
 }
 
 function renderCollapsedJsonList(properties) {
   jsonContainer.innerHTML = '';
+  backButton.style.display = 'none';
   properties.forEach((property, index) => {
     const block = document.createElement('div');
     block.className = 'json-preview-block';
@@ -59,48 +62,59 @@ function renderCollapsedJsonList(properties) {
 }
 
 function addToggleListeners() {
-  const collapsibles = jsonContainer.querySelectorAll('.collapsible');
+  // Expand on collapsed labels
+  const collapsibles = jsonContainer.querySelectorAll('.collapsible.collapsed');
   collapsibles.forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
       const index = el.getAttribute('data-index');
       const key = el.getAttribute('data-key');
       const property = AvailResponse[index];
-      const isCollapsed = el.classList.contains('collapsed');
+      
+      const expandedJson = JSON.stringify(property[key], null, 2);
 
-      if (isCollapsed) {
-        // Expand
-        el.classList.remove('collapsed');
-        el.classList.add('expanded');
+      // Create collapse toggle label
+      const collapseToggle = document.createElement('span');
+      collapseToggle.className = 'collapsible expanded';
+      collapseToggle.setAttribute('data-index', index);
+      collapseToggle.setAttribute('data-key', key);
+      collapseToggle.textContent = '[...click to collapse]';
 
-        const wrapper = document.createElement('div');
-        wrapper.classList.add('expanded-wrapper');
+      // Create pre block for expanded JSON
+      const code = document.createElement('pre');
+      code.textContent = expandedJson;
 
-        const collapseLine = document.createElement('div');
-        collapseLine.classList.add('collapse-line', 'clickable');
-        collapseLine.textContent = '[...click to collapse]';
+      // Wrapper div to hold toggle label + code
+      const wrapper = document.createElement('div');
+      wrapper.appendChild(collapseToggle);
+      wrapper.appendChild(code);
 
-        collapseLine.onclick = () => {
-          wrapper.replaceWith(el);
-          el.classList.remove('expanded');
-          el.classList.add('collapsed');
-          el.textContent = Array.isArray(property[key]) ? '[...click to expand]' : '{...click to expand}';
-          addToggleListeners();
-        };
+      // Replace the collapsed label with expanded block
+      el.replaceWith(wrapper);
 
-        const expandedJsonPre = document.createElement('pre');
-        expandedJsonPre.textContent = JSON.stringify(property[key], null, 2);
-        expandedJsonPre.classList.add('expanded-json');
+      // Attach listener for collapse toggle
+      collapseToggle.addEventListener('click', (evt) => {
+        evt.stopPropagation();
 
-        wrapper.appendChild(collapseLine);
-        wrapper.appendChild(expandedJsonPre);
+        // Rebuild collapsed label
+        const collapsedLabel = document.createElement('span');
+        collapsedLabel.className = 'collapsible collapsed';
+        collapsedLabel.setAttribute('data-index', index);
+        collapsedLabel.setAttribute('data-key', key);
+        collapsedLabel.textContent = key === 'rooms' ? '[...click to expand]' : '{...click to expand}';
 
-        el.replaceWith(wrapper);
-      }
+        // Replace expanded block with collapsed label
+        wrapper.replaceWith(collapsedLabel);
+
+        // Re-attach expand listener on new collapsed label
+        addToggleListeners();
+      });
     });
   });
 }
 
 function createPropertyList(properties, container) {
+  container.innerHTML = ''; // Clear first
   properties.forEach(property => {
     const propertyDiv = document.createElement('div');
     propertyDiv.className = 'property-item';
@@ -182,3 +196,10 @@ function scrollToJsonKey(key) {
     jsonContainer.scrollTop += offset - 20;
   }
 }
+
+backButton.addEventListener('click', () => {
+  createPropertyList(AvailResponse, propertyList);
+  renderCollapsedJsonList(AvailResponse);
+  scrollToTop();
+  backButton.style.display = 'none';
+});

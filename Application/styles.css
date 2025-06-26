@@ -134,14 +134,15 @@ h1 {
 }
 
 .highlight-comment {
-  background-color: yellow;
-  color: black;
-  padding: 0 3px;
-  border-radius: 3px;
-  display: inline-block;
+  font-weight: normal;
+  color: inherit;
 }
 
 .comment-icon {
   margin-left: 5px;
+  font-weight: bold;
+  color: white;
   cursor: help;
+  font-size: 18px; /* 👈 increase this for larger icon */
 }
+

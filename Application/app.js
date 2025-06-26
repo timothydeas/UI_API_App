@@ -291,7 +291,7 @@ function attachJsonCommenting(preElement) {
       span.textContent = selectedText;
 
       const pin = document.createElement('span');
-      pin.textContent = '📌';
+      pin.textContent = '💬';
       pin.className = 'comment-icon';
       pin.title = textarea.value;
 

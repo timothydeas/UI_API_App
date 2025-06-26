@@ -26,18 +26,48 @@ function scrollToTop() {
   propertyList.scrollTop = 0;
 }
 
-function renderJson(jsonData) {
+// function renderJson(jsonData) {
+//   clearHighlights();
+//   jsonContainer.innerHTML = ''; // Clear existing content
+
+//   const pre = document.createElement('pre');
+//   pre.textContent = JSON.stringify(jsonData, null, 2);
+//   pre.classList.add('json-full');
+
+//   jsonContainer.appendChild(pre);
+//   backButton.style.display = 'inline-block';
+
+//   attachJsonCommenting(pre); //  enable comment interaction
+// }
+
+function renderJson(jsonData, highlightKey = null) {
   clearHighlights();
-  jsonContainer.innerHTML = ''; // Clear existing content
+  jsonContainer.innerHTML = '';
 
   const pre = document.createElement('pre');
-  pre.textContent = JSON.stringify(jsonData, null, 2);
-  pre.classList.add('json-full');
+  let jsonText = JSON.stringify(jsonData, null, 2);
 
+  // Wrap the key to highlight in a span
+  if (highlightKey) {
+    const keyRegex = new RegExp(`("${highlightKey}"\\s*:)`, 'g');
+    jsonText = jsonText.replace(keyRegex, '<span class="highlighted">$1</span>');
+  }
+
+  pre.innerHTML = jsonText;
+  pre.classList.add('json-full');
   jsonContainer.appendChild(pre);
+
   backButton.style.display = 'inline-block';
 
-  attachJsonCommenting(pre); //  enable comment interaction
+  // Attach comment logic
+  attachJsonCommenting(pre);
+
+  // Scroll *after* it's in DOM
+  if (highlightKey) {
+    requestAnimationFrame(() => {
+      scrollToJsonKey();
+    });
+  }
 }
 
 function renderCollapsedJsonList(properties) {
@@ -153,9 +183,10 @@ function createPropertyList(properties, container) {
         refundStatus.style.color = firstRate.refundable ? 'green' : 'red';
         refundStatus.classList.add('clickable');
         refundStatus.onclick = () => {
-          renderJson(property);
-          highlightJsonKey('refundable');
-          scrollToJsonKey('refundable');
+          renderJson(property, 'refundable');
+          // renderJson(property);
+          // highlightJsonKey('refundable');
+          // scrollToJsonKey('refundable');
         };
         propertyDiv.appendChild(refundStatus);
 
@@ -166,9 +197,10 @@ function createPropertyList(properties, container) {
           priceP.textContent = `Total Price: ${totalPrice} ${currency}`;
           priceP.classList.add('clickable');
           priceP.onclick = () => {
-            renderJson(property);
-            highlightJsonKey('totals');
-            scrollToJsonKey('totals');
+            renderJson(property, 'totals');
+            // renderJson(property);
+            // highlightJsonKey('totals');
+            // scrollToJsonKey('totals');
           };
           propertyDiv.appendChild(priceP);
         }
@@ -182,9 +214,10 @@ function createPropertyList(properties, container) {
           nightlyP.textContent = `Nightly Rate (Day 1): ${nightlyText}`;
           nightlyP.classList.add('clickable');
           nightlyP.onclick = () => {
-            renderJson(property);
-            highlightJsonKey('nightly');
-            scrollToJsonKey('nightly');
+            renderJson(property, 'nightly');
+            // renderJson(property);
+            // highlightJsonKey('nightly');
+            // scrollToJsonKey('nightly');
           };
           propertyDiv.appendChild(nightlyP);
         }
@@ -203,15 +236,25 @@ function highlightJsonKey(key) {
   jsonContainer.innerHTML = highlightedText;
 }
 
-function scrollToJsonKey(key) {
+// function scrollToJsonKey(key) {
+//   const highlightedEl = jsonContainer.querySelector('.highlighted');
+//   if (highlightedEl) {
+//     const containerTop = jsonContainer.getBoundingClientRect().top;
+//     const highlightTop = highlightedEl.getBoundingClientRect().top;
+//     const offset = highlightTop - containerTop;
+//     jsonContainer.scrollTop += offset - 20;
+//   }
+// }
+
+function scrollToJsonKey() {
   const highlightedEl = jsonContainer.querySelector('.highlighted');
   if (highlightedEl) {
     const containerTop = jsonContainer.getBoundingClientRect().top;
-    const highlightTop = highlightedEl.getBoundingClientRect().top;
-    const offset = highlightTop - containerTop;
-    jsonContainer.scrollTop += offset - 20;
+    const elementTop = highlightedEl.getBoundingClientRect().top;
+    jsonContainer.scrollTop += elementTop - containerTop - 20;
   }
 }
+
 
 backButton.addEventListener('click', () => {
   createPropertyList(AvailResponse, propertyList);

@@ -28,13 +28,27 @@ function scrollToTop() {
 
 function renderJson(jsonData) {
   clearHighlights();
-  jsonContainer.textContent = JSON.stringify(jsonData, null, 2);
+  jsonContainer.innerHTML = ''; // Clear existing content
+
+  const pre = document.createElement('pre');
+  pre.textContent = JSON.stringify(jsonData, null, 2);
+  pre.classList.add('json-full');
+
+  jsonContainer.appendChild(pre);
   backButton.style.display = 'inline-block';
+
+  attachJsonCommenting(pre); //  enable comment interaction
 }
 
 function renderCollapsedJsonList(properties) {
   jsonContainer.innerHTML = '';
   backButton.style.display = 'none';
+
+  const heading = document.createElement('div');
+  heading.className = 'json-heading';
+  heading.textContent = 'API Response: Availability';
+  jsonContainer.appendChild(heading);
+
   properties.forEach((property, index) => {
     const block = document.createElement('div');
     block.className = 'json-preview-block';
@@ -55,10 +69,12 @@ function renderCollapsedJsonList(properties) {
     const pre = document.createElement('pre');
     pre.innerHTML = formatted;
     block.appendChild(pre);
+    attachJsonCommenting(pre);
     jsonContainer.appendChild(block);
   });
 
   addToggleListeners();
+  
 }
 
 function addToggleListeners() {
@@ -203,3 +219,49 @@ backButton.addEventListener('click', () => {
   scrollToTop();
   backButton.style.display = 'none';
 });
+
+function attachJsonCommenting(preElement) {
+  preElement.addEventListener('mouseup', () => {
+    const selection = window.getSelection();
+    const selectedText = selection.toString().trim();
+
+    if (!selectedText || !selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+
+    const textarea = document.createElement('textarea');
+    textarea.placeholder = 'Add a comment...';
+    textarea.className = 'comment-box';
+    textarea.style.top = `${rect.bottom + window.scrollY}px`;
+    textarea.style.left = `${rect.left + window.scrollX}px`;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.className = 'comment-submit';
+    saveBtn.style.top = `${rect.bottom + window.scrollY}px`;
+    saveBtn.style.left = `${rect.left + window.scrollX + 230}px`;
+
+    saveBtn.onclick = () => {
+      const span = document.createElement('span');
+      span.className = 'highlight-comment';
+      span.textContent = selectedText;
+
+      const pin = document.createElement('span');
+      pin.textContent = '📌';
+      pin.className = 'comment-icon';
+      pin.title = textarea.value;
+
+      span.appendChild(pin);
+      range.deleteContents();
+      range.insertNode(span);
+
+      textarea.remove();
+      saveBtn.remove();
+      selection.removeAllRanges();
+    };
+
+    document.body.appendChild(textarea);
+    document.body.appendChild(saveBtn);
+  });
+}

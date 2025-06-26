@@ -113,3 +113,35 @@ h1 {
 .json-preview-block {
   margin-bottom: 20px;
 }
+.comment-box {
+  position: absolute;
+  z-index: 999;
+  width: 220px;
+  height: 60px;
+  resize: none;
+  font-size: 14px;
+  border: 1px solid #aaa;
+  padding: 6px;
+  background-color: white;
+}
+
+.comment-submit {
+  position: absolute;
+  z-index: 1000;
+  padding: 4px 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.highlight-comment {
+  background-color: yellow;
+  color: black;
+  padding: 0 3px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.comment-icon {
+  margin-left: 5px;
+  cursor: help;
+}

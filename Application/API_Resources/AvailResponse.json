@@ -835,7 +835,7 @@
           "href": "/v3/properties/12345/availability?token=MY5S3j36cOcL"
         }
       },
-      "score": 10052
+      "score": 10012
     },
     {
       "property_id": "19763",
@@ -1254,6 +1254,6 @@
           "href": "/v3/properties/12345/availability?token=MY5S3j36cOcL"
         }
       },
-      "score": 10052
+      "score": 10040
     }
   ]

@@ -11,7 +11,7 @@ fetch('API_Resources/AvailResponse.json')
   .then(data => {
     AvailResponse = data;
     createPropertyList(AvailResponse, propertyList);
-    renderCollapsedJsonList(data); // 👈 Show summarized list view in right panel on load
+    renderCollapsedJsonList(data); // show summary list on load
   })
   .catch(console.error);
 
@@ -27,6 +27,7 @@ function scrollToTop() {
 function renderJson(jsonData) {
   clearHighlights();
   jsonContainer.textContent = JSON.stringify(jsonData, null, 2);
+  scrollToTop();
 }
 
 function renderCollapsedJsonList(properties) {
@@ -67,14 +68,33 @@ function addToggleListeners() {
       const isCollapsed = el.classList.contains('collapsed');
 
       if (isCollapsed) {
-        const expanded = JSON.stringify(property[key], null, 2);
+        // Expand
         el.classList.remove('collapsed');
         el.classList.add('expanded');
-        el.textContent = expanded;
-      } else {
-        el.classList.remove('expanded');
-        el.classList.add('collapsed');
-        el.textContent = key === 'rooms' ? '[...click to expand]' : '{...click to expand}';
+
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('expanded-wrapper');
+
+        const collapseLine = document.createElement('div');
+        collapseLine.classList.add('collapse-line', 'clickable');
+        collapseLine.textContent = '[...click to collapse]';
+
+        collapseLine.onclick = () => {
+          wrapper.replaceWith(el);
+          el.classList.remove('expanded');
+          el.classList.add('collapsed');
+          el.textContent = Array.isArray(property[key]) ? '[...click to expand]' : '{...click to expand}';
+          addToggleListeners();
+        };
+
+        const expandedJsonPre = document.createElement('pre');
+        expandedJsonPre.textContent = JSON.stringify(property[key], null, 2);
+        expandedJsonPre.classList.add('expanded-json');
+
+        wrapper.appendChild(collapseLine);
+        wrapper.appendChild(expandedJsonPre);
+
+        el.replaceWith(wrapper);
       }
     });
   });

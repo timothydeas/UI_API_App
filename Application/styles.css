@@ -60,6 +60,8 @@ h1 {
   font-weight: bold;
   color: black;
 }
+
+/* Collapsible toggles */
 .collapsible {
   font-weight: bold;
   color: #4da6ff;
@@ -78,5 +80,17 @@ h1 {
 
 .json-preview-block {
   margin-bottom: 20px;
+}
+
+/* Collapse line at top when expanded */
+.collapse-line {
+  font-weight: bold;
+  color: #4da6ff;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+
+.collapse-line:hover {
+  text-decoration: underline;
 }
 

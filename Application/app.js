@@ -26,20 +26,6 @@ function scrollToTop() {
   propertyList.scrollTop = 0;
 }
 
-// function renderJson(jsonData) {
-//   clearHighlights();
-//   jsonContainer.innerHTML = ''; // Clear existing content
-
-//   const pre = document.createElement('pre');
-//   pre.textContent = JSON.stringify(jsonData, null, 2);
-//   pre.classList.add('json-full');
-
-//   jsonContainer.appendChild(pre);
-//   backButton.style.display = 'inline-block';
-
-//   attachJsonCommenting(pre); //  enable comment interaction
-// }
-
 function renderJson(jsonData, highlightKey = null) {
   clearHighlights();
   jsonContainer.innerHTML = '';
@@ -93,8 +79,8 @@ function renderCollapsedJsonList(properties) {
 
     let formatted = JSON.stringify(shortJson, null, 2);
     formatted = formatted
-      .replace('"rooms": "[...]"', `"rooms": <span class="collapsible collapsed" data-index="${index}" data-key="rooms">[...click to expand]</span>`)
-      .replace('"links": "{...}"', `"links": <span class="collapsible collapsed" data-index="${index}" data-key="links">{...click to expand}</span>`);
+      .replace('"rooms": "[...]"', `"rooms": <span class="collapsible collapsed" data-index="${index}" data-key="rooms">[...]</span>`)
+      .replace('"links": "{...}"', `"links": <span class="collapsible collapsed" data-index="${index}" data-key="links">{...}</span>`);
 
     const pre = document.createElement('pre');
     pre.innerHTML = formatted;
@@ -124,7 +110,7 @@ function addToggleListeners() {
       collapseToggle.className = 'collapsible expanded';
       collapseToggle.setAttribute('data-index', index);
       collapseToggle.setAttribute('data-key', key);
-      collapseToggle.textContent = '[...click to collapse]';
+      collapseToggle.textContent = '[...]';
 
       // Create pre block for expanded JSON
       const code = document.createElement('pre');
@@ -147,7 +133,7 @@ function addToggleListeners() {
         collapsedLabel.className = 'collapsible collapsed';
         collapsedLabel.setAttribute('data-index', index);
         collapsedLabel.setAttribute('data-key', key);
-        collapsedLabel.textContent = key === 'rooms' ? '[...click to expand]' : '{...click to expand}';
+        collapsedLabel.textContent = key === 'rooms' ? '[...]' : '{...}';
 
         // Replace expanded block with collapsed label
         wrapper.replaceWith(collapsedLabel);

@@ -164,17 +164,16 @@ function createPropertyList(properties, container) {
     if (firstRoom) {
       const firstRate = firstRoom.rates?.[0];
       if (firstRate) {
-        const refundStatus = document.createElement('p');
-        refundStatus.textContent = `Refundable: ${firstRate.refundable ? 'Yes' : 'No'}`;
-        refundStatus.style.color = firstRate.refundable ? 'green' : 'red';
-        refundStatus.classList.add('clickable');
-        refundStatus.onclick = () => {
-          renderJson(property, 'refundable');
-          // renderJson(property);
-          // highlightJsonKey('refundable');
-          // scrollToJsonKey('refundable');
-        };
-        propertyDiv.appendChild(refundStatus);
+        if (firstRate.refundable) {
+      const refundStatus = document.createElement('p');
+      refundStatus.textContent = 'Fully Refundable';
+      refundStatus.className = 'property-info-line clickable';
+      refundStatus.style.color = '#007A33';
+      refundStatus.onclick = () => {
+        renderJson(property, 'refundable');
+      };
+      propertyDiv.appendChild(refundStatus);
+    }
 
         const totalPrice = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.value;
         const currency = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.currency;
@@ -184,29 +183,37 @@ function createPropertyList(properties, container) {
           priceP.classList.add('clickable');
           priceP.onclick = () => {
             renderJson(property, 'totals');
-            // renderJson(property);
-            // highlightJsonKey('totals');
-            // scrollToJsonKey('totals');
           };
           propertyDiv.appendChild(priceP);
         }
 
-        const nightlyRates = firstRate.occupancy_pricing?.['2']?.nightly?.[0];
-        if (nightlyRates) {
-          const nightlyText = nightlyRates
-            .map(rateItem => `${rateItem.type}: ${rateItem.value} ${rateItem.currency}`)
-            .join(', ');
-          const nightlyP = document.createElement('p');
-          nightlyP.textContent = `Nightly Rate (Day 1): ${nightlyText}`;
-          nightlyP.classList.add('clickable');
-          nightlyP.onclick = () => {
-            renderJson(property, 'nightly');
-            // renderJson(property);
-            // highlightJsonKey('nightly');
-            // scrollToJsonKey('nightly');
-          };
-          propertyDiv.appendChild(nightlyP);
+        // const nightlyRates = firstRate.occupancy_pricing?.['2']?.nightly?.[0];
+        // if (nightlyRates) {
+        //   const nightlyText = nightlyRates
+        //     .map(rateItem => `${rateItem.type}: ${rateItem.value} ${rateItem.currency}`)
+        //     .join(', ');
+        //   const nightlyP = document.createElement('p');
+        //   nightlyP.textContent = `Nightly Rate (Day 1): ${nightlyText}`;
+        //   nightlyP.classList.add('clickable');
+        //   nightlyP.onclick = () => {
+        //     renderJson(property, 'nightly');
+        //   };
+        //   propertyDiv.appendChild(nightlyP);
+        // }
+        const nightlyRateArray = firstRate.occupancy_pricing?.['2']?.nightly?.[0];
+        if (Array.isArray(nightlyRateArray)) {
+          const baseRate = nightlyRateArray.find(rate => rate.type === 'base_rate');
+          if (baseRate) {
+            const nightlyP = document.createElement('p');
+            nightlyP.innerHTML = `<span class="nightly-link">$${baseRate.value} nightly</span>`;
+            nightlyP.classList.add('clickable');
+            nightlyP.onclick = () => {
+              renderJson(property, 'nightly');
+            };
+            propertyDiv.appendChild(nightlyP);
+          }
         }
+
       }
     }
 
@@ -221,16 +228,6 @@ function highlightJsonKey(key) {
   const highlightedText = jsonText.replace(regex, match => `<span class="highlighted">${match}</span>`);
   jsonContainer.innerHTML = highlightedText;
 }
-
-// function scrollToJsonKey(key) {
-//   const highlightedEl = jsonContainer.querySelector('.highlighted');
-//   if (highlightedEl) {
-//     const containerTop = jsonContainer.getBoundingClientRect().top;
-//     const highlightTop = highlightedEl.getBoundingClientRect().top;
-//     const offset = highlightTop - containerTop;
-//     jsonContainer.scrollTop += offset - 20;
-//   }
-// }
 
 function scrollToJsonKey() {
   const highlightedEl = jsonContainer.querySelector('.highlighted');

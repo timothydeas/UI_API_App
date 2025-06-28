@@ -35,6 +35,9 @@ h1 {
   padding-bottom: 10px;
   border-bottom: 1px solid #eee;
 }
+.property-info-line {
+  margin: 2px 0;
+}
 
 .clickable {
   cursor: pointer;
@@ -145,4 +148,8 @@ h1 {
   color: white;
   cursor: help;
   font-size: 18px;
+}
+.nightly-link {
+  text-decoration: underline;
+  font-weight: bold;
 }

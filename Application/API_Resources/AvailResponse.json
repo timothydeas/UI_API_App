@@ -1,6 +1,6 @@
 [
     {
-      "property_id": "19248",
+      "property_id": "12345",
       "status": "available",
       "rooms": [
         {
@@ -419,7 +419,7 @@
       "score": 10052
     },
     {
-      "property_id": "19542",
+      "property_id": "54321",
       "status": "available",
       "rooms": [
         {
@@ -838,7 +838,7 @@
       "score": 10012
     },
     {
-      "property_id": "19763",
+      "property_id": "87654",
       "status": "available",
       "rooms": [
         {

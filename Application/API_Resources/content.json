@@ -1,0 +1,58 @@
+
+[
+  {
+    "property_id": "12345",
+    "name": "Hotel Lux",
+    "images": [
+      {
+        "caption": "Featured Image",
+        "hero_image": true,
+        "category": 3,
+        "links": {
+          "70px": {
+            "method": "GET",
+            "href": "https://www.pexels.com/photo/brown-hotel-interior-53464/"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "property_id": "54321",
+    "name": "Hotel View",
+    "images": [
+      {
+        "caption": "Featured Image",
+        "hero_image": true,
+        "category": 3,
+        "links": {
+          "70px": {
+            "method": "GET",
+            "href": "https://www.pexels.com/photo/beige-concrete-building-70441/"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "property_id": "87654",
+    "name": "Hotel Oasis",
+    "images": [
+      {
+        "caption": "Featured Image",
+        "hero_image": true,
+        "category": 3,
+        "links": {
+          "70px": {
+            "method": "GET",
+            "href": "https://www.pexels.com/photo/turned-on-lights-along-hotel-hallway-277572/"
+          }
+        }
+      }
+    ]
+  }
+]
+
+
+
+

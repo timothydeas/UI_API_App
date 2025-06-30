@@ -1,20 +1,34 @@
+
 let AvailResponse = null;
+let ContentData = null;
 
 const propertyList = document.getElementById('property-list');
 const jsonContainer = document.getElementById('json-container');
 const backButton = document.getElementById('back-to-main');
 
-fetch('API_Resources/AvailResponse.json')
-  .then(response => {
-    if (!response.ok) throw new Error('Network response was not ok');
-    return response.json();
-  })
-  .then(data => {
-    AvailResponse = data;
-    createPropertyList(AvailResponse, propertyList);
-    renderCollapsedJsonList(AvailResponse);
-  })
-  .catch(console.error);
+// fetch('API_Resources/AvailResponse.json')
+//   .then(response => {
+//     if (!response.ok) throw new Error('Network response was not ok');
+//     return response.json();
+//   })
+//   .then(data => {
+//     AvailResponse = data;
+//     createPropertyList(AvailResponse, propertyList);
+//     renderCollapsedJsonList(AvailResponse);
+//   })
+//   .catch(console.error);
+
+Promise.all([
+  fetch('API_Resources/AvailResponse.json').then(res => res.json()),
+  fetch('API_Resources/content.json').then(res => res.json())
+])
+.then(([availData, contentData]) => {
+  AvailResponse = availData;
+  ContentData = contentData;
+  createPropertyList(AvailResponse, propertyList);
+  renderCollapsedJsonList(AvailResponse);
+})
+.catch(console.error);
 
 function clearHighlights() {
   const highlighted = jsonContainer.querySelectorAll('.highlighted');
@@ -145,6 +159,7 @@ function addToggleListeners() {
   });
 }
 
+// Figure out how to toggle between Availability and Content Responses
 function createPropertyList(properties, container) {
   container.innerHTML = ''; // Clear first
   properties.forEach(property => {
@@ -152,12 +167,20 @@ function createPropertyList(properties, container) {
     propertyDiv.className = 'property-item';
 
     const propTitle = document.createElement('h3');
-    propTitle.textContent = `Property ID: ${property.property_id}`;
+  const contentMatch = ContentData?.find(c => c.property_id === property.property_id);
+  const hotelName = contentMatch?.name || `Property ID: ${property.property_id}`;
+  propTitle.textContent = hotelName;
+
     propTitle.classList.add('clickable');
     propTitle.onclick = () => {
-      renderJson(property);
+      if (contentMatch) {
+        renderJson(contentMatch, 'name');
+      } else {
+        renderJson(property); // fallback
+      }
       scrollToTop();
     };
+
     propertyDiv.appendChild(propTitle);
 
     const firstRoom = property.rooms?.[0];
@@ -175,17 +198,6 @@ function createPropertyList(properties, container) {
       propertyDiv.appendChild(refundStatus);
     }
 
-        // const totalPrice = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.value;
-        // const currency = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.currency;
-        // if (totalPrice && currency) {
-        //   const priceP = document.createElement('p');
-        //   priceP.textContent = `Total Price: ${totalPrice} ${currency}`;
-        //   priceP.classList.add('clickable');
-        //   priceP.onclick = () => {
-        //     renderJson(property, 'totals');
-        //   };
-        //   propertyDiv.appendChild(priceP);
-        // }
         const nightlyRateArray = firstRate.occupancy_pricing?.['2']?.nightly?.[0];
         if (Array.isArray(nightlyRateArray)) {
           const baseRate = nightlyRateArray.find(rate => rate.type === 'base_rate');
@@ -211,21 +223,6 @@ function createPropertyList(properties, container) {
           };
           propertyDiv.appendChild(totalP);
         }
-
-
-        // const nightlyRates = firstRate.occupancy_pricing?.['2']?.nightly?.[0];
-        // if (nightlyRates) {
-        //   const nightlyText = nightlyRates
-        //     .map(rateItem => `${rateItem.type}: ${rateItem.value} ${rateItem.currency}`)
-        //     .join(', ');
-        //   const nightlyP = document.createElement('p');
-        //   nightlyP.textContent = `Nightly Rate (Day 1): ${nightlyText}`;
-        //   nightlyP.classList.add('clickable');
-        //   nightlyP.onclick = () => {
-        //     renderJson(property, 'nightly');
-        //   };
-        //   propertyDiv.appendChild(nightlyP);
-        // }
       
 
       }
@@ -305,3 +302,4 @@ function attachJsonCommenting(preElement) {
     document.body.appendChild(saveBtn);
   });
 }
+

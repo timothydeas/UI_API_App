@@ -159,3 +159,26 @@ h1 {
   color: #222;
   text-decoration: none;
 }
+.property-info-line {
+  margin: 4px 0;
+}
+
+.hotel-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0078d7;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.hotel-name:hover {
+  text-decoration: underline;
+}
+
+.hotel-image {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}

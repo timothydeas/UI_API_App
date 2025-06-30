@@ -175,30 +175,16 @@ function createPropertyList(properties, container) {
       propertyDiv.appendChild(refundStatus);
     }
 
-        const totalPrice = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.value;
-        const currency = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.currency;
-        if (totalPrice && currency) {
-          const priceP = document.createElement('p');
-          priceP.textContent = `Total Price: ${totalPrice} ${currency}`;
-          priceP.classList.add('clickable');
-          priceP.onclick = () => {
-            renderJson(property, 'totals');
-          };
-          propertyDiv.appendChild(priceP);
-        }
-
-        // const nightlyRates = firstRate.occupancy_pricing?.['2']?.nightly?.[0];
-        // if (nightlyRates) {
-        //   const nightlyText = nightlyRates
-        //     .map(rateItem => `${rateItem.type}: ${rateItem.value} ${rateItem.currency}`)
-        //     .join(', ');
-        //   const nightlyP = document.createElement('p');
-        //   nightlyP.textContent = `Nightly Rate (Day 1): ${nightlyText}`;
-        //   nightlyP.classList.add('clickable');
-        //   nightlyP.onclick = () => {
-        //     renderJson(property, 'nightly');
+        // const totalPrice = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.value;
+        // const currency = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.currency;
+        // if (totalPrice && currency) {
+        //   const priceP = document.createElement('p');
+        //   priceP.textContent = `Total Price: ${totalPrice} ${currency}`;
+        //   priceP.classList.add('clickable');
+        //   priceP.onclick = () => {
+        //     renderJson(property, 'totals');
         //   };
-        //   propertyDiv.appendChild(nightlyP);
+        //   propertyDiv.appendChild(priceP);
         // }
         const nightlyRateArray = firstRate.occupancy_pricing?.['2']?.nightly?.[0];
         if (Array.isArray(nightlyRateArray)) {
@@ -213,6 +199,34 @@ function createPropertyList(properties, container) {
             propertyDiv.appendChild(nightlyP);
           }
         }
+
+        const totalPrice = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.value;
+        const currency = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.currency;
+        if (totalPrice && currency) {
+          const totalP = document.createElement('p');
+          totalP.innerHTML = `<span class="total-price-link">$${totalPrice} total</span>`;
+          totalP.classList.add('clickable');
+          totalP.onclick = () => {
+            renderJson(property, 'totals');
+          };
+          propertyDiv.appendChild(totalP);
+        }
+
+
+        // const nightlyRates = firstRate.occupancy_pricing?.['2']?.nightly?.[0];
+        // if (nightlyRates) {
+        //   const nightlyText = nightlyRates
+        //     .map(rateItem => `${rateItem.type}: ${rateItem.value} ${rateItem.currency}`)
+        //     .join(', ');
+        //   const nightlyP = document.createElement('p');
+        //   nightlyP.textContent = `Nightly Rate (Day 1): ${nightlyText}`;
+        //   nightlyP.classList.add('clickable');
+        //   nightlyP.onclick = () => {
+        //     renderJson(property, 'nightly');
+        //   };
+        //   propertyDiv.appendChild(nightlyP);
+        // }
+      
 
       }
     }

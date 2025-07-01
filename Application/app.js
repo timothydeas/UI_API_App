@@ -170,106 +170,114 @@ function addToggleListeners() {
 // Figure out how to toggle between Availability and Content Responses
 function createPropertyList(properties, container) {
   container.innerHTML = ''; // Clear first
+
   properties.forEach(property => {
     const propertyDiv = document.createElement('div');
     propertyDiv.className = 'property-item';
+    propertyDiv.style.display = 'flex';
+    propertyDiv.style.alignItems = 'flex-start';
+    propertyDiv.style.gap = '12px';
+
+    const contentMatch = ContentData?.find(c => c.property_id === property.property_id);
+    const hotelName = contentMatch?.name || `Property ID: ${property.property_id}`;
+    const imageUrl = contentMatch?.images?.find(img => img.hero_image)?.links?.['70px']?.href;
+
+    // Left column: Hotel image
+      if (imageUrl) {
+      const img = document.createElement('img');
+      img.src = imageUrl; // <-- this was missing in your update
+      img.alt = `${hotelName} image`;
+      img.style.width = '140px'; // increased width
+      img.style.height = 'auto';
+      img.style.objectFit = 'cover';
+      img.style.borderRadius = '6px';
+      
+      propertyDiv.appendChild(img);
+    }
+
+
+    // Middle column: Hotel name + refundable
+    const middleCol = document.createElement('div');
+    middleCol.style.flex = '0 0 40%'; // reduce width
+
 
     const propTitle = document.createElement('h3');
-  const contentMatch = ContentData?.find(c => c.property_id === property.property_id);
-  const hotelName = contentMatch?.name || `Property ID: ${property.property_id}`;
-  // Display image if hero_image exists
-if (contentMatch?.images) {
-  const heroImgObj = contentMatch.images.find(img => img.hero_image);
-  const heroImgHref = heroImgObj?.links?.["70px"]?.href;
-
-  if (heroImgHref) {
-    const img = document.createElement('img');
-    img.src = heroImgHref;
-    img.alt = `${hotelName} image`;
-    img.className = 'hotel-thumbnail';
-    propertyDiv.appendChild(img);
-  }
-}
- propTitle.textContent = hotelName;
-  propTitle.classList.add('clickable');
-  propTitle.onclick = () => {
-    if (contentMatch) {
-      renderJson(contentMatch, 'name', 'API Response: Content');
-    } else {
-      renderJson(property);
-    }
-    scrollToTop();
-  };
-  propertyDiv.appendChild(propTitle);
-
-
+    propTitle.textContent = hotelName;
     propTitle.classList.add('clickable');
-    // propTitle.onclick = () => {
-    //   if (contentMatch) {
-    //     renderJson(contentMatch, 'name');
-    //   } else {
-    //     renderJson(property); // fallback
-    //   }
-    //   scrollToTop();
-    // };
-
     propTitle.onclick = () => {
-    if (contentMatch) {
-      renderJson(contentMatch, 'name', 'API Response: Content');
-    } else {
-      renderJson(property); // fallback
-    }
-    scrollToTop();
-   };
+      clearHighlights();
+      jsonContainer.innerHTML = '';
+
+      const heading = document.createElement('div');
+      heading.className = 'json-heading';
+      heading.textContent = 'API Response: Content';
+      jsonContainer.appendChild(heading);
+
+      const pre = document.createElement('pre');
+      let jsonText = JSON.stringify(contentMatch || property, null, 2);
+
+      if (contentMatch) {
+        const keyRegex = new RegExp(`("name"\\s*:)`, 'g');
+        jsonText = jsonText.replace(keyRegex, '<span class="highlighted">$1</span>');
+      }
+
+      pre.innerHTML = jsonText;
+      pre.classList.add('json-full');
+      jsonContainer.appendChild(pre);
+
+      backButton.style.display = 'inline-block';
+      attachJsonCommenting(pre);
+      scrollToTop();
+    };
 
 
-    propertyDiv.appendChild(propTitle);
+    middleCol.appendChild(propTitle);
 
     const firstRoom = property.rooms?.[0];
-    if (firstRoom) {
-      const firstRate = firstRoom.rates?.[0];
-      if (firstRate) {
-        if (firstRate.refundable) {
-      const refundStatus = document.createElement('p');
-      refundStatus.textContent = 'Fully Refundable';
-      refundStatus.className = 'property-info-line clickable';
-      refundStatus.style.color = '#007A33';
-      refundStatus.onclick = () => {
-        renderJson(property, 'refundable');
-      };
-      propertyDiv.appendChild(refundStatus);
+    const firstRate = firstRoom?.rates?.[0];
+
+    if (firstRate?.refundable) {
+      const refundP = document.createElement('p');
+      refundP.textContent = 'Fully Refundable';
+      refundP.className = 'clickable';
+      refundP.style.color = '#007A33';
+      refundP.style.margin = '4px 0';
+      refundP.onclick = () => renderJson(property, 'refundable');
+      middleCol.appendChild(refundP);
     }
 
-        const nightlyRateArray = firstRate.occupancy_pricing?.['2']?.nightly?.[0];
-        if (Array.isArray(nightlyRateArray)) {
-          const baseRate = nightlyRateArray.find(rate => rate.type === 'base_rate');
-          if (baseRate) {
-            const nightlyP = document.createElement('p');
-            nightlyP.innerHTML = `<span class="nightly-link">$${baseRate.value} nightly</span>`;
-            nightlyP.classList.add('clickable');
-            nightlyP.onclick = () => {
-              renderJson(property, 'nightly');
-            };
-            propertyDiv.appendChild(nightlyP);
-          }
-        }
+    propertyDiv.appendChild(middleCol);
 
-        const totalPrice = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.value;
-        const currency = firstRate.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.currency;
-        if (totalPrice && currency) {
-          const totalP = document.createElement('p');
-          totalP.innerHTML = `<span class="total-price-link">$${totalPrice} total</span>`;
-          totalP.classList.add('clickable');
-          totalP.onclick = () => {
-            renderJson(property, 'totals');
-          };
-          propertyDiv.appendChild(totalP);
-        }
-      
+    // Right column: nightly + total
+    const rightCol = document.createElement('div');
+    rightCol.style.flex = '1';
+    rightCol.style.alignItems = 'flex-end';
+    rightCol.style.minWidth = '100px';
 
+
+    const nightlyArray = firstRate?.occupancy_pricing?.['2']?.nightly?.[0];
+    if (Array.isArray(nightlyArray)) {
+      const baseRate = nightlyArray.find(rate => rate.type === 'base_rate');
+      if (baseRate) {
+        const nightlyP = document.createElement('p');
+        nightlyP.innerHTML = `<span class="nightly-link">$${baseRate.value} nightly</span>`;
+        nightlyP.classList.add('clickable');
+        nightlyP.onclick = () => renderJson(property, 'nightly');
+        rightCol.appendChild(nightlyP);
       }
     }
 
+    const totalVal = firstRate?.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.value;
+    const currency = firstRate?.occupancy_pricing?.['2']?.totals?.inclusive?.billable_currency?.currency;
+    if (totalVal && currency) {
+      const totalP = document.createElement('p');
+      totalP.innerHTML = `<span class="total-price-link">$${totalVal} total</span>`;
+      totalP.classList.add('clickable');
+      totalP.onclick = () => renderJson(property, 'totals');
+      rightCol.appendChild(totalP);
+    }
+
+    propertyDiv.appendChild(rightCol);
     container.appendChild(propertyDiv);
   });
 }

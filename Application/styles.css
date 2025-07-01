@@ -38,6 +38,12 @@ h1 {
 .property-info-line {
   margin: 2px 0;
 }
+.property-item h3 {
+  margin: 0;
+}
+.property-item p {
+  margin: 4px 0;
+}
 
 .clickable {
   cursor: pointer;

@@ -40,9 +40,17 @@ function scrollToTop() {
   propertyList.scrollTop = 0;
 }
 
-function renderJson(jsonData, highlightKey = null) {
+// function renderJson(jsonData, highlightKey = null) {
+function renderJson(jsonData, highlightKey = null, headingText = null) {
   clearHighlights();
   jsonContainer.innerHTML = '';
+
+  if (headingText) {
+    const heading = document.createElement('div');
+    heading.className = 'json-heading';
+    heading.textContent = headingText;
+    jsonContainer.appendChild(heading);
+  }
 
   const pre = document.createElement('pre');
   let jsonText = JSON.stringify(jsonData, null, 2);
@@ -169,17 +177,51 @@ function createPropertyList(properties, container) {
     const propTitle = document.createElement('h3');
   const contentMatch = ContentData?.find(c => c.property_id === property.property_id);
   const hotelName = contentMatch?.name || `Property ID: ${property.property_id}`;
-  propTitle.textContent = hotelName;
+  // Display image if hero_image exists
+if (contentMatch?.images) {
+  const heroImgObj = contentMatch.images.find(img => img.hero_image);
+  const heroImgHref = heroImgObj?.links?.["70px"]?.href;
+
+  if (heroImgHref) {
+    const img = document.createElement('img');
+    img.src = heroImgHref;
+    img.alt = `${hotelName} image`;
+    img.className = 'hotel-thumbnail';
+    propertyDiv.appendChild(img);
+  }
+}
+ propTitle.textContent = hotelName;
+  propTitle.classList.add('clickable');
+  propTitle.onclick = () => {
+    if (contentMatch) {
+      renderJson(contentMatch, 'name', 'API Response: Content');
+    } else {
+      renderJson(property);
+    }
+    scrollToTop();
+  };
+  propertyDiv.appendChild(propTitle);
+
 
     propTitle.classList.add('clickable');
+    // propTitle.onclick = () => {
+    //   if (contentMatch) {
+    //     renderJson(contentMatch, 'name');
+    //   } else {
+    //     renderJson(property); // fallback
+    //   }
+    //   scrollToTop();
+    // };
+
     propTitle.onclick = () => {
-      if (contentMatch) {
-        renderJson(contentMatch, 'name');
-      } else {
-        renderJson(property); // fallback
-      }
-      scrollToTop();
-    };
+    if (contentMatch) {
+      renderJson(contentMatch, 'name', 'API Response: Content');
+    } else {
+      renderJson(property); // fallback
+    }
+    scrollToTop();
+   };
+
 
     propertyDiv.appendChild(propTitle);
 

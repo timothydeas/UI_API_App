@@ -204,6 +204,7 @@ function createPropertyList(properties, container) {
     const propTitle = document.createElement('h3');
     propTitle.textContent = hotelName;
     propTitle.classList.add('clickable');
+    
     propTitle.onclick = () => {
       clearHighlights();
       jsonContainer.innerHTML = '';

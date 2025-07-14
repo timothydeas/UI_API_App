@@ -1,3 +1,38 @@
+# Tab bar styles
+.tab-btn {
+  background: #f3f3f3;
+  color: #333;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  padding: 8px 24px;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  margin-right: 2px;
+  outline: none;
+  transition: background 0.2s, color 0.2s;
+  position: relative;
+  top: 2px;
+  z-index: 2;
+}
+.tab-btn.active {
+  background: #fff;
+  color: #0078d7;
+  font-weight: bold;
+  border-bottom: 2px solid #fff;
+  z-index: 3;
+}
+.tab-btn:not(.active) {
+  background: #e0e0e0;
+  color: #888;
+}
+#tab-bar {
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 10px;
+  background: transparent;
+}
 body, html {
   height: 100%;
   margin: 0;

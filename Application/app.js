@@ -6,18 +6,6 @@ const propertyList = document.getElementById('property-list');
 const jsonContainer = document.getElementById('json-container');
 const backButton = document.getElementById('back-to-main');
 
-// fetch('API_Resources/AvailResponse.json')
-//   .then(response => {
-//     if (!response.ok) throw new Error('Network response was not ok');
-//     return response.json();
-//   })
-//   .then(data => {
-//     AvailResponse = data;
-//     createPropertyList(AvailResponse, propertyList);
-//     renderCollapsedJsonList(AvailResponse);
-//   })
-//   .catch(console.error);
-
 Promise.all([
   fetch('API_Resources/AvailResponse.json').then(res => res.json()),
   fetch('API_Resources/content.json').then(res => res.json())
@@ -77,6 +65,45 @@ function renderJson(jsonData, highlightKey = null, headingText = null) {
     });
   }
 }
+
+// --- Tab bar event logic ---
+document.addEventListener('DOMContentLoaded', () => {
+  const tabAvail = document.getElementById('tab-availability');
+  const tabContent = document.getElementById('tab-content');
+  if (tabAvail && tabContent) {
+    // Set initial state: Availability tab active, Content tab inactive
+    tabAvail.classList.add('active');
+    tabContent.classList.remove('active');
+
+    tabAvail.addEventListener('click', () => {
+      tabAvail.classList.add('active');
+      tabContent.classList.remove('active');
+      renderCollapsedJsonList(AvailResponse);
+      backButton.style.display = 'none';
+    });
+    tabContent.addEventListener('click', () => {
+      tabContent.classList.add('active');
+      tabAvail.classList.remove('active');
+      // Show the Content JSON view as in property title click
+      jsonContainer.innerHTML = '';
+      const heading = document.createElement('div');
+      heading.className = 'json-heading';
+      heading.textContent = 'API Response: Content';
+      jsonContainer.appendChild(heading);
+      const pre = document.createElement('pre');
+      let jsonText = JSON.stringify(ContentData, null, 2);
+      pre.innerHTML = jsonText;
+      pre.classList.add('json-full');
+      jsonContainer.appendChild(pre);
+      backButton.style.display = 'inline-block';
+      attachJsonCommenting(pre);
+      scrollToTop();
+    });
+    // Show availability collapsed view by default
+    renderCollapsedJsonList(AvailResponse);
+    backButton.style.display = 'none';
+  }
+});
 
 function renderCollapsedJsonList(properties) {
   jsonContainer.innerHTML = '';
@@ -206,6 +233,13 @@ function createPropertyList(properties, container) {
     propTitle.classList.add('clickable');
     
     propTitle.onclick = () => {
+      // Switch tab UI to Content
+      const tabAvail = document.getElementById('tab-availability');
+      const tabContent = document.getElementById('tab-content');
+      if (tabAvail && tabContent) {
+        tabAvail.classList.remove('active');
+        tabContent.classList.add('active');
+      }
       clearHighlights();
       jsonContainer.innerHTML = '';
 
@@ -243,7 +277,16 @@ function createPropertyList(properties, container) {
       refundP.className = 'clickable';
       refundP.style.color = '#007A33';
       refundP.style.margin = '4px 0';
-      refundP.onclick = () => renderJson(property, 'refundable');
+      refundP.onclick = () => {
+        // Switch tab UI to Content
+        const tabAvail = document.getElementById('tab-availability');
+        const tabContent = document.getElementById('tab-content');
+        if (tabAvail && tabContent) {
+          tabAvail.classList.remove('active');
+          tabContent.classList.add('active');
+        }
+        renderJson(property, 'refundable');
+      };
       middleCol.appendChild(refundP);
     }
 
@@ -263,7 +306,16 @@ function createPropertyList(properties, container) {
         const nightlyP = document.createElement('p');
         nightlyP.innerHTML = `<span class="nightly-link">$${baseRate.value} nightly</span>`;
         nightlyP.classList.add('clickable');
-        nightlyP.onclick = () => renderJson(property, 'nightly');
+        nightlyP.onclick = () => {
+          // Switch tab UI to Content
+          const tabAvail = document.getElementById('tab-availability');
+          const tabContent = document.getElementById('tab-content');
+          if (tabAvail && tabContent) {
+            tabAvail.classList.remove('active');
+            tabContent.classList.add('active');
+          }
+          renderJson(property, 'nightly');
+        };
         rightCol.appendChild(nightlyP);
       }
     }
@@ -274,7 +326,16 @@ function createPropertyList(properties, container) {
       const totalP = document.createElement('p');
       totalP.innerHTML = `<span class="total-price-link">$${totalVal} total</span>`;
       totalP.classList.add('clickable');
-      totalP.onclick = () => renderJson(property, 'totals');
+      totalP.onclick = () => {
+        // Switch tab UI to Content
+        const tabAvail = document.getElementById('tab-availability');
+        const tabContent = document.getElementById('tab-content');
+        if (tabAvail && tabContent) {
+          tabAvail.classList.remove('active');
+          tabContent.classList.add('active');
+        }
+        renderJson(property, 'totals');
+      };
       rightCol.appendChild(totalP);
     }
 

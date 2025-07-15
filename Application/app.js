@@ -482,7 +482,7 @@ function renderCommentsTab() {
   jsonComments.forEach(comment => {
     const li = document.createElement('li');
     li.style.marginBottom = '16px';
-    li.innerHTML = `<span style="background:yellow;color:black;padding:2px 4px;border-radius:3px;">${comment.text}</span><br><span style="color:#0078d7;">${comment.note}</span><br><span style="font-size:12px;color:#888;">${new Date(comment.timestamp).toLocaleString()}</span>`;
+    li.innerHTML = `<span style="background:yellow;color:black;padding:2px 4px;border-radius:3px;">${comment.text}</span><br><span class='comments-list-note'>${comment.note}</span><br><span style="font-size:12px;color:#888;">${new Date(comment.timestamp).toLocaleString()}</span>`;
     ul.appendChild(li);
   });
   jsonContainer.appendChild(ul);

@@ -1,4 +1,3 @@
-
 let AvailResponse = null;
 let ContentData = null;
 
@@ -241,12 +240,12 @@ function createPropertyList(properties, container) {
       refundP.style.color = '#007A33';
       refundP.style.margin = '4px 0';
       refundP.onclick = () => {
-        // Switch tab UI to Content
+        // Switch tab UI to Availability
         const tabAvail = document.getElementById('tab-availability');
         const tabContent = document.getElementById('tab-content');
         if (tabAvail && tabContent) {
-          tabAvail.classList.remove('active');
-          tabContent.classList.add('active');
+          tabAvail.classList.add('active');
+          tabContent.classList.remove('active');
         }
         renderJson(property, 'refundable');
       };
@@ -270,12 +269,12 @@ function createPropertyList(properties, container) {
         nightlyP.innerHTML = `<span class="nightly-link">$${baseRate.value} nightly</span>`;
         nightlyP.classList.add('clickable');
         nightlyP.onclick = () => {
-          // Switch tab UI to Content
+          // Switch tab UI to Availability
           const tabAvail = document.getElementById('tab-availability');
           const tabContent = document.getElementById('tab-content');
           if (tabAvail && tabContent) {
-            tabAvail.classList.remove('active');
-            tabContent.classList.add('active');
+            tabAvail.classList.add('active');
+            tabContent.classList.remove('active');
           }
           renderJson(property, 'nightly');
         };
@@ -290,12 +289,12 @@ function createPropertyList(properties, container) {
       totalP.innerHTML = `<span class="total-price-link">$${totalVal} total</span>`;
       totalP.classList.add('clickable');
       totalP.onclick = () => {
-        // Switch tab UI to Content
+        // Switch tab UI to Availability
         const tabAvail = document.getElementById('tab-availability');
         const tabContent = document.getElementById('tab-content');
         if (tabAvail && tabContent) {
-          tabAvail.classList.remove('active');
-          tabContent.classList.add('active');
+          tabAvail.classList.add('active');
+          tabContent.classList.remove('active');
         }
         renderJson(property, 'totals');
       };

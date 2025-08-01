@@ -67,13 +67,13 @@ function renderJson(jsonData, highlightKey = null, headingText = null) {
 
 // --- Tab bar event logic ---
 
-function renderCollapsedJsonList(properties) {
+function renderCollapsedJsonList(properties, headingOverride) {
   jsonContainer.innerHTML = '';
   backButton.style.display = 'none';
 
   const heading = document.createElement('div');
   heading.className = 'json-heading';
-  heading.textContent = 'API Response: Availability';
+  heading.textContent = headingOverride || 'Availability API Response';
   jsonContainer.appendChild(heading);
 
   properties.forEach((property, index) => {
@@ -113,7 +113,7 @@ function addToggleListeners() {
       const index = el.getAttribute('data-index');
       const key = el.getAttribute('data-key');
       const property = AvailResponse[index];
-      
+
       const expandedJson = JSON.stringify(property[key], null, 2);
 
       // Create collapse toggle label
@@ -126,6 +126,12 @@ function addToggleListeners() {
       // Create pre block for expanded JSON
       const code = document.createElement('pre');
       code.textContent = expandedJson;
+
+      // Restore highlights/comments in expanded section
+      setTimeout(() => {
+        restoreCommentHighlights(code);
+        attachJsonCommenting(code);
+      }, 0);
 
       // Wrapper div to hold toggle label + code
       const wrapper = document.createElement('div');
@@ -207,7 +213,7 @@ function createPropertyList(properties, container) {
 
       const heading = document.createElement('div');
       heading.className = 'json-heading';
-      heading.textContent = 'API Response: Content';
+      heading.textContent = 'Content API Response';
       jsonContainer.appendChild(heading);
 
       const pre = document.createElement('pre');
@@ -344,6 +350,14 @@ backButton.addEventListener('click', () => {
 let jsonComments = [];
 const COMMENTS_STORAGE_KEY = 'jsonComments';
 
+function getCurrentTabSource() {
+  const tabAvail = document.getElementById('tab-availability');
+  const tabContent = document.getElementById('tab-content');
+  if (tabAvail && tabAvail.classList.contains('active')) return 'Availability';
+  if (tabContent && tabContent.classList.contains('active')) return 'Content';
+  return 'Unknown';
+}
+
 function saveCommentsToStorage() {
   localStorage.setItem(COMMENTS_STORAGE_KEY, JSON.stringify(jsonComments));
 }
@@ -387,6 +401,40 @@ function showToolbarNotification(message) {
   setTimeout(removeKindleToolbar, 1200);
 }
 
+function getSelectionContext(preElement, range) {
+  // Get a unique context for the selection: use the path to the pre, and the offset in the text
+  // This is a simple but robust way to distinguish between similar text in different places
+  const prePath = [];
+  let node = preElement;
+  while (node && node.id !== 'json-container') {
+    if (node.parentElement) {
+      const idx = Array.from(node.parentElement.children).indexOf(node);
+      prePath.unshift(idx);
+      node = node.parentElement;
+    } else {
+      break;
+    }
+  }
+  // Get start offset in pre's textContent
+  let startOffset = 0;
+  if (range && range.startContainer && preElement.contains(range.startContainer)) {
+    const walker = document.createTreeWalker(preElement, NodeFilter.SHOW_TEXT, null, false);
+    let found = false;
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node === range.startContainer) {
+        startOffset += range.startOffset;
+        found = true;
+        break;
+      } else {
+        startOffset += node.textContent.length;
+      }
+    }
+    if (!found) startOffset = 0;
+  }
+  return prePath.join('-') + ':' + startOffset;
+}
+
 function attachJsonCommenting(preElement) {
   preElement.addEventListener('mousedown', removeKindleToolbar);
   preElement.addEventListener('mouseup', (e) => {
@@ -398,6 +446,7 @@ function attachJsonCommenting(preElement) {
       if (!preElement.contains(selection.anchorNode) || !preElement.contains(selection.focusNode)) return;
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
+      const contextId = getSelectionContext(preElement, range);
 
       showKindleToolbar(rect,
         // onComment
@@ -405,16 +454,18 @@ function attachJsonCommenting(preElement) {
           removeKindleToolbar();
           const note = prompt('Add a comment for:\n"' + selectedText + '"');
           if (!note) return;
-          // Save comment
+          // Save comment with unique contextId
           const comment = {
             text: selectedText,
             note,
             timestamp: Date.now(),
-            context: preElement.innerText.slice(0, 100) // crude context for now
+            context: preElement.innerText.slice(0, 100),
+            source: getCurrentTabSource(),
+            contextId
           };
           jsonComments.push(comment);
           saveCommentsToStorage();
-          highlightSelection(range, comment);
+          highlightSelection(range, comment, contextId);
           selection.removeAllRanges();
         },
         // onCopy
@@ -428,13 +479,14 @@ function attachJsonCommenting(preElement) {
   });
 }
 
-function highlightSelection(range, comment) {
+function highlightSelection(range, comment, contextId) {
   const span = document.createElement('span');
   span.className = 'highlight-comment';
-  span.style.background = 'yellow';
-  span.style.color = 'black';
+  span.style.background = '#2196f3';
+  span.style.color = '#fff';
   span.title = comment.note;
   span.dataset.timestamp = comment.timestamp;
+  span.dataset.contextId = contextId;
   span.textContent = comment.text;
   // Optionally add a comment icon
   const pin = document.createElement('span');
@@ -448,30 +500,84 @@ function highlightSelection(range, comment) {
 
 function restoreCommentHighlights(preElement) {
   if (!jsonComments.length) return;
-  // For each comment, try to find and highlight the text in the pre
   let html = preElement.innerHTML;
-  jsonComments.forEach(comment => {
-    // Escape regex special chars in comment.text
-    const safeText = comment.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(safeText, 'g');
-    html = html.replace(regex, match => {
-      return `<span class="highlight-comment" style="background:yellow;color:black;" title="${comment.note}" data-timestamp="${comment.timestamp}">${match}<span class="comment-icon" title="${comment.note}">💬</span></span>`;
-    });
+  // Remove any previous highlight-comment spans
+  html = html.replace(/<span class="highlight-comment"[^>]*>.*?<\/span>/gs, (match) => {
+    // Remove only if it contains the 💬 icon
+    return match.includes('💬') ? match.replace(/<span class="highlight-comment"[^>]*>(.*?)<span class="comment-icon"[^>]*>💬<\/span><\/span>/gs, '$1') : match;
   });
   preElement.innerHTML = html;
+  // For each comment, try to find and highlight the text in the pre, only if contextId matches
+  jsonComments.forEach(comment => {
+    if (!comment.contextId) return;
+    // Use a robust search for the exact text (multi-line safe)
+    const textToFind = comment.text;
+    const contextText = preElement.innerText;
+    let startIdx = contextText.indexOf(textToFind);
+    if (startIdx !== -1) {
+      // Find the start and end offsets in the HTML
+      let charCount = 0;
+      let startNode = null, endNode = null, startOffset = 0, endOffset = 0;
+      const walker = document.createTreeWalker(preElement, NodeFilter.SHOW_TEXT, null, false);
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        if (!startNode && charCount + node.textContent.length > startIdx) {
+          startNode = node;
+          startOffset = startIdx - charCount;
+        }
+        if (!endNode && charCount + node.textContent.length >= startIdx + textToFind.length) {
+          endNode = node;
+          endOffset = startIdx + textToFind.length - charCount;
+          break;
+        }
+        charCount += node.textContent.length;
+      }
+      if (startNode && endNode) {
+        // Create a range and wrap it
+        const range = document.createRange();
+        range.setStart(startNode, startOffset);
+        range.setEnd(endNode, endOffset);
+        const span = document.createElement('span');
+        span.className = 'highlight-comment';
+        span.style.background = '#2196f3';
+        span.style.color = '#fff';
+        span.title = comment.note;
+        span.dataset.timestamp = comment.timestamp;
+        span.dataset.contextId = comment.contextId;
+        span.textContent = range.toString();
+        const pin = document.createElement('span');
+        pin.textContent = '\ud83d\udcac';
+        pin.className = 'comment-icon';
+        pin.title = comment.note;
+        span.appendChild(pin);
+        range.deleteContents();
+        range.insertNode(span);
+      }
+    }
+  });
 }
 
 // --- Comments Tab Logic ---
 function renderCommentsTab() {
   const jsonContainer = document.getElementById('json-container');
   jsonContainer.innerHTML = '';
+  // Distinct style for comments view (light blue background)
+  jsonContainer.style.background = '#e3f2fd';
+  jsonContainer.style.color = '#222';
+  jsonContainer.style.fontFamily = 'Arial, sans-serif';
+  jsonContainer.style.fontSize = '16px';
+  jsonContainer.style.padding = '32px 24px';
+
   const heading = document.createElement('div');
   heading.className = 'json-heading';
+  heading.style.fontSize = '2rem';
+  heading.style.marginBottom = '24px';
   heading.textContent = 'All Comments';
   jsonContainer.appendChild(heading);
   if (!jsonComments.length) {
     const p = document.createElement('p');
     p.textContent = 'No comments yet.';
+    p.style.color = '#888';
     jsonContainer.appendChild(p);
     return;
   }
@@ -480,8 +586,12 @@ function renderCommentsTab() {
   ul.style.padding = '0';
   jsonComments.forEach(comment => {
     const li = document.createElement('li');
-    li.style.marginBottom = '16px';
-    li.innerHTML = `<span style="background:yellow;color:black;padding:2px 4px;border-radius:3px;">${comment.text}</span><br><span class='comments-list-note'>${comment.note}</span><br><span style="font-size:12px;color:#888;">${new Date(comment.timestamp).toLocaleString()}</span>`;
+    li.style.marginBottom = '28px';
+    li.style.background = '#fff';
+    li.style.borderRadius = '8px';
+    li.style.padding = '16px 18px';
+    li.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+    li.innerHTML = `<span style="background:#2196f3;color:#fff;padding:2px 6px;border-radius:3px;">${comment.text}<span class='comment-icon' style='color:#fff;font-size:18px;margin-left:5px;' title='Comment'>💬</span></span><br><span class='comments-list-note' style="color:#222;font-size:17px;">${comment.note}</span><br><span style="font-size:13px;color:#888;">${new Date(comment.timestamp).toLocaleString()} | <b>${comment.source} API Response</b></span>`;
     ul.appendChild(li);
   });
   jsonContainer.appendChild(ul);
@@ -500,22 +610,48 @@ document.addEventListener('DOMContentLoaded', () => {
     tabContent.classList.remove('active');
     tabComments.classList.remove('active');
 
-    tabAvail.addEventListener('click', () => {
-      tabAvail.classList.add('active');
-      tabContent.classList.remove('active');
-      tabComments.classList.remove('active');
-      renderCollapsedJsonList(AvailResponse);
+    // Remove previous event listeners by replacing nodes (ensures no duplicate handlers)
+    const tabAvailClone = tabAvail.cloneNode(true);
+    const tabContentClone = tabContent.cloneNode(true);
+    const tabCommentsClone = tabComments.cloneNode(true);
+    tabAvail.parentNode.replaceChild(tabAvailClone, tabAvail);
+    tabContent.parentNode.replaceChild(tabContentClone, tabContent);
+    tabComments.parentNode.replaceChild(tabCommentsClone, tabComments);
+
+    tabAvailClone.addEventListener('click', () => {
+      tabAvailClone.classList.add('active');
+      tabContentClone.classList.remove('active');
+      tabCommentsClone.classList.remove('active');
+      // Reset tab backgrounds and text color
+      tabAvailClone.style.background = '';
+      tabContentClone.style.background = '';
+      tabCommentsClone.style.background = '';
+      tabAvailClone.style.color = '';
+      tabContentClone.style.color = '';
+      tabCommentsClone.style.color = '';
+      jsonContainer.style.background = '';
+      jsonContainer.style.color = '';
+      renderCollapsedJsonList(AvailResponse, 'Availability API Response');
       backButton.style.display = 'none';
     });
-    tabContent.addEventListener('click', () => {
-      tabContent.classList.add('active');
-      tabAvail.classList.remove('active');
-      tabComments.classList.remove('active');
+    tabContentClone.addEventListener('click', () => {
+      tabContentClone.classList.add('active');
+      tabAvailClone.classList.remove('active');
+      tabCommentsClone.classList.remove('active');
+      // Reset tab backgrounds and text color
+      tabAvailClone.style.background = '';
+      tabContentClone.style.background = '';
+      tabCommentsClone.style.background = '';
+      tabAvailClone.style.color = '';
+      tabContentClone.style.color = '';
+      tabCommentsClone.style.color = '';
+      jsonContainer.style.background = '';
+      jsonContainer.style.color = '';
       // Show the Content JSON view as in property title click
       jsonContainer.innerHTML = '';
       const heading = document.createElement('div');
       heading.className = 'json-heading';
-      heading.textContent = 'API Response: Content';
+      heading.textContent = 'Content API Response';
       jsonContainer.appendChild(heading);
       const pre = document.createElement('pre');
       let jsonText = JSON.stringify(ContentData, null, 2);
@@ -527,10 +663,19 @@ document.addEventListener('DOMContentLoaded', () => {
       restoreCommentHighlights(pre);
       scrollToTop();
     });
-    tabComments.addEventListener('click', () => {
-      tabComments.classList.add('active');
-      tabAvail.classList.remove('active');
-      tabContent.classList.remove('active');
+    tabCommentsClone.addEventListener('click', () => {
+      tabCommentsClone.classList.add('active');
+      tabAvailClone.classList.remove('active');
+      tabContentClone.classList.remove('active');
+      // Set Comments tab and container background and text color
+      tabAvailClone.style.background = '';
+      tabContentClone.style.background = '';
+      tabCommentsClone.style.background = '#e6f2ff';
+      tabAvailClone.style.color = '';
+      tabContentClone.style.color = '';
+      tabCommentsClone.style.color = '';
+      jsonContainer.style.background = '#e6f2ff';
+      jsonContainer.style.color = '#222';
       renderCommentsTab();
       backButton.style.display = 'none';
     });

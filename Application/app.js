@@ -95,6 +95,7 @@ function renderCollapsedJsonList(properties, headingOverride) {
 
     const pre = document.createElement('pre');
     pre.innerHTML = formatted;
+    pre.setAttribute('data-json-path', `root[${index}]`);
     block.appendChild(pre);
     attachJsonCommenting(pre);
     jsonContainer.appendChild(block);
@@ -126,7 +127,17 @@ function addToggleListeners() {
       // Create pre block for expanded JSON
       const code = document.createElement('pre');
       code.textContent = expandedJson;
-
+      // Attach a unique data-json-path to the expanded pre, including parent path if available
+      let parentPath = '';
+      let parent = el.closest('pre');
+      if (parent && parent.hasAttribute('data-json-path')) {
+        parentPath = parent.getAttribute('data-json-path');
+      } else if (el.hasAttribute('data-index')) {
+        parentPath = `root[${el.getAttribute('data-index')}]`;
+      } else {
+        parentPath = '';
+      }
+      code.setAttribute('data-json-path', parentPath ? `${parentPath}.${key}` : key);
       // Restore highlights/comments in expanded section
       setTimeout(() => {
         restoreCommentHighlights(code);
@@ -282,6 +293,9 @@ function createPropertyList(properties, container) {
             tabAvail.classList.add('active');
             tabContent.classList.remove('active');
           }
+          // Always reset jsonContainer background and color
+          jsonContainer.style.background = '';
+          jsonContainer.style.color = '';
           renderJson(property, 'nightly');
         };
         rightCol.appendChild(nightlyP);
@@ -302,6 +316,9 @@ function createPropertyList(properties, container) {
           tabAvail.classList.add('active');
           tabContent.classList.remove('active');
         }
+        // Always reset jsonContainer background and color
+        jsonContainer.style.background = '';
+        jsonContainer.style.color = '';
         renderJson(property, 'totals');
       };
       rightCol.appendChild(totalP);
@@ -404,17 +421,8 @@ function showToolbarNotification(message) {
 function getSelectionContext(preElement, range) {
   // Get a unique context for the selection: use the path to the pre, and the offset in the text
   // This is a simple but robust way to distinguish between similar text in different places
-  const prePath = [];
-  let node = preElement;
-  while (node && node.id !== 'json-container') {
-    if (node.parentElement) {
-      const idx = Array.from(node.parentElement.children).indexOf(node);
-      prePath.unshift(idx);
-      node = node.parentElement;
-    } else {
-      break;
-    }
-  }
+  // Use data-json-path for context uniqueness
+  const jsonPath = preElement.getAttribute('data-json-path') || '';
   // Get start offset in pre's textContent
   let startOffset = 0;
   if (range && range.startContainer && preElement.contains(range.startContainer)) {
@@ -432,7 +440,7 @@ function getSelectionContext(preElement, range) {
     }
     if (!found) startOffset = 0;
   }
-  return prePath.join('-') + ':' + startOffset;
+  return jsonPath + ':' + startOffset;
 }
 
 function attachJsonCommenting(preElement) {
@@ -508,8 +516,11 @@ function restoreCommentHighlights(preElement) {
   });
   preElement.innerHTML = html;
   // For each comment, try to find and highlight the text in the pre, only if contextId matches
+  const preJsonPath = preElement.getAttribute('data-json-path') || '';
   jsonComments.forEach(comment => {
     if (!comment.contextId) return;
+    const commentPath = comment.contextId.split(':')[0];
+    if (commentPath !== preJsonPath) return;
     // Use a robust search for the exact text (multi-line safe)
     const textToFind = comment.text;
     const contextText = preElement.innerText;

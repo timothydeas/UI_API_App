@@ -140,7 +140,8 @@ function addToggleListeners() {
       code.setAttribute('data-json-path', parentPath ? `${parentPath}.${key}` : key);
       // Restore highlights/comments in expanded section
       setTimeout(() => {
-        restoreCommentHighlights(code);
+        // Restore highlights for all visible pre blocks after expanding
+        document.querySelectorAll('#json-container pre').forEach(pre => restoreCommentHighlights(pre));
         attachJsonCommenting(code);
       }, 0);
 
@@ -165,6 +166,9 @@ function addToggleListeners() {
 
         // Replace expanded block with collapsed label
         wrapper.replaceWith(collapsedLabel);
+
+        // Restore highlights for all visible pre blocks after collapsing
+        document.querySelectorAll('#json-container pre').forEach(pre => restoreCommentHighlights(pre));
 
         // Re-attach expand listener on new collapsed label
         addToggleListeners();
@@ -508,13 +512,8 @@ function highlightSelection(range, comment, contextId) {
 
 function restoreCommentHighlights(preElement) {
   if (!jsonComments.length) return;
-  let html = preElement.innerHTML;
-  // Remove any previous highlight-comment spans
-  html = html.replace(/<span class="highlight-comment"[^>]*>.*?<\/span>/gs, (match) => {
-    // Remove only if it contains the 💬 icon
-    return match.includes('💬') ? match.replace(/<span class="highlight-comment"[^>]*>(.*?)<span class="comment-icon"[^>]*>💬<\/span><\/span>/gs, '$1') : match;
-  });
-  preElement.innerHTML = html;
+  // Remove all highlight-comment spans before restoring
+  removeAllHighlightsInPre(preElement);
   // For each comment, try to find and highlight the text in the pre, only if contextId matches
   const preJsonPath = preElement.getAttribute('data-json-path') || '';
   jsonComments.forEach(comment => {
@@ -565,6 +564,27 @@ function restoreCommentHighlights(preElement) {
         range.insertNode(span);
       }
     }
+  });
+}
+
+// Remove all highlight-comment spans in a pre block
+function removeAllHighlightsInPre(pre) {
+  if (!pre) return;
+  // Replace all highlight-comment spans with their text content (removes icon too)
+  const walker = document.createTreeWalker(pre, NodeFilter.SHOW_ELEMENT, null, false);
+  let nodesToRemove = [];
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (node.classList && node.classList.contains('highlight-comment')) {
+      nodesToRemove.push(node);
+    }
+  }
+  nodesToRemove.forEach(node => {
+    const parent = node.parentNode;
+    while (node.firstChild) {
+      parent.insertBefore(node.firstChild, node);
+    }
+    parent.removeChild(node);
   });
 }
 
@@ -708,7 +728,8 @@ renderJson = function(jsonData, highlightKey = null, headingText = null) {
 const origRenderCollapsedJsonList = renderCollapsedJsonList;
 renderCollapsedJsonList = function(properties) {
   origRenderCollapsedJsonList(properties);
-  // After rendering, restore highlights for each pre
+  // After rendering, reload comments and restore highlights for each pre
+  loadCommentsFromStorage();
   document.querySelectorAll('#json-container pre').forEach(pre => restoreCommentHighlights(pre));
   // Re-attach expand/collapse listeners (since innerHTML replacement removes them)
   addToggleListeners();

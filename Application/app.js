@@ -88,16 +88,83 @@ function renderCollapsedJsonList(properties, headingOverride) {
       score: property.score
     };
 
+    // Build preview with clickable brackets inside the preview
     let formatted = JSON.stringify(shortJson, null, 2);
+    // Create unique placeholders
     formatted = formatted
-      .replace('"rooms": "[...]"', `"rooms": <span class="collapsible collapsed" data-index="${index}" data-key="rooms">[...]</span>`)
-      .replace('"links": "{...}"', `"links": <span class="collapsible collapsed" data-index="${index}" data-key="links">{...}</span>`);
+      .replace('"rooms": "[...]"', '"rooms": __ROOMS_PLACEHOLDER__')
+      .replace('"links": "{...}"', '"links": __LINKS_PLACEHOLDER__');
 
+    // Create pre and insert placeholders
     const pre = document.createElement('pre');
     pre.innerHTML = formatted;
     pre.setAttribute('data-json-path', `root[${index}]`);
     block.appendChild(pre);
     attachJsonCommenting(pre);
+
+    // Create and insert clickable bracket elements for rooms
+    const roomsCollapsed = document.createElement('span');
+    roomsCollapsed.className = 'open-bracket collapsed array';
+    roomsCollapsed.textContent = '[...]';
+    roomsCollapsed.style.cursor = 'pointer';
+    roomsCollapsed.setAttribute('data-key', 'rooms');
+    roomsCollapsed.style.color = '#4da6ff';
+    roomsCollapsed.style.fontWeight = 'bold';
+    roomsCollapsed.style.userSelect = 'none';
+
+    const roomsExpanded = document.createElement('span');
+    roomsExpanded.className = 'open-bracket expanded array';
+    roomsExpanded.textContent = '[';
+    roomsExpanded.style.cursor = 'pointer';
+    roomsExpanded.setAttribute('data-key', 'rooms');
+    roomsExpanded.style.color = '#4da6ff';
+    roomsExpanded.style.fontWeight = 'bold';
+    roomsExpanded.style.userSelect = 'none';
+    roomsExpanded.style.display = 'none';
+
+    // Insert collapsed by default
+    pre.innerHTML = pre.innerHTML.replace('__ROOMS_PLACEHOLDER__', roomsCollapsed.outerHTML);
+
+    // Create expanded section for rooms
+    const expandedRooms = document.createElement('pre');
+    expandedRooms.style.display = 'none';
+    expandedRooms.setAttribute('data-json-path', `root[${index}].rooms`);
+    expandedRooms.textContent = JSON.stringify(property.rooms, null, 2);
+    attachJsonCommenting(expandedRooms);
+    block.appendChild(roomsExpanded);
+    block.appendChild(expandedRooms);
+
+    // Create and insert clickable bracket elements for links
+    const linksCollapsed = document.createElement('span');
+    linksCollapsed.className = 'open-bracket collapsed object';
+    linksCollapsed.textContent = '{...}';
+    linksCollapsed.style.cursor = 'pointer';
+    linksCollapsed.setAttribute('data-key', 'links');
+    linksCollapsed.style.color = '#4da6ff';
+    linksCollapsed.style.fontWeight = 'bold';
+    linksCollapsed.style.userSelect = 'none';
+
+    const linksExpanded = document.createElement('span');
+    linksExpanded.className = 'open-bracket expanded object';
+    linksExpanded.textContent = '{';
+    linksExpanded.style.cursor = 'pointer';
+    linksExpanded.setAttribute('data-key', 'links');
+    linksExpanded.style.color = '#4da6ff';
+    linksExpanded.style.fontWeight = 'bold';
+    linksExpanded.style.userSelect = 'none';
+    linksExpanded.style.display = 'none';
+
+    pre.innerHTML = pre.innerHTML.replace('__LINKS_PLACEHOLDER__', linksCollapsed.outerHTML);
+
+    // Create expanded section for links
+    const expandedLinks = document.createElement('pre');
+    expandedLinks.style.display = 'none';
+    expandedLinks.setAttribute('data-json-path', `root[${index}].links`);
+    expandedLinks.textContent = JSON.stringify(property.links, null, 2);
+    attachJsonCommenting(expandedLinks);
+    block.appendChild(linksExpanded);
+    block.appendChild(expandedLinks);
+
     jsonContainer.appendChild(block);
   });
 
@@ -106,74 +173,48 @@ function renderCollapsedJsonList(properties, headingOverride) {
 }
 
 function addToggleListeners() {
-  // Expand on collapsed labels
-  const collapsibles = jsonContainer.querySelectorAll('.collapsible.collapsed');
-  collapsibles.forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const index = el.getAttribute('data-index');
-      const key = el.getAttribute('data-key');
-      const property = AvailResponse[index];
-
-      const expandedJson = JSON.stringify(property[key], null, 2);
-
-      // Create collapse toggle label
-      const collapseToggle = document.createElement('span');
-      collapseToggle.className = 'collapsible expanded';
-      collapseToggle.setAttribute('data-index', index);
-      collapseToggle.setAttribute('data-key', key);
-      collapseToggle.textContent = '[...]';
-
-      // Create pre block for expanded JSON
-      const code = document.createElement('pre');
-      code.textContent = expandedJson;
-      // Attach a unique data-json-path to the expanded pre, including parent path if available
-      let parentPath = '';
-      let parent = el.closest('pre');
-      if (parent && parent.hasAttribute('data-json-path')) {
-        parentPath = parent.getAttribute('data-json-path');
-      } else if (el.hasAttribute('data-index')) {
-        parentPath = `root[${el.getAttribute('data-index')}]`;
-      } else {
-        parentPath = '';
-      }
-      code.setAttribute('data-json-path', parentPath ? `${parentPath}.${key}` : key);
-      // Restore highlights/comments in expanded section
-      setTimeout(() => {
-        // Restore highlights for all visible pre blocks after expanding
-        document.querySelectorAll('#json-container pre').forEach(pre => restoreCommentHighlights(pre));
-        attachJsonCommenting(code);
-      }, 0);
-
-      // Wrapper div to hold toggle label + code
-      const wrapper = document.createElement('div');
-      wrapper.appendChild(collapseToggle);
-      wrapper.appendChild(code);
-
-      // Replace the collapsed label with expanded block
-      el.replaceWith(wrapper);
-
-      // Attach listener for collapse toggle
-      collapseToggle.addEventListener('click', (evt) => {
-        evt.stopPropagation();
-
-        // Rebuild collapsed label
-        const collapsedLabel = document.createElement('span');
-        collapsedLabel.className = 'collapsible collapsed';
-        collapsedLabel.setAttribute('data-index', index);
-        collapsedLabel.setAttribute('data-key', key);
-        collapsedLabel.textContent = key === 'rooms' ? '[...]' : '{...}';
-
-        // Replace expanded block with collapsed label
-        wrapper.replaceWith(collapsedLabel);
-
-        // Restore highlights for all visible pre blocks after collapsing
-        document.querySelectorAll('#json-container pre').forEach(pre => restoreCommentHighlights(pre));
-
-        // Re-attach expand listener on new collapsed label
-        addToggleListeners();
+  // Expand/collapse using show/hide
+  const blocks = jsonContainer.querySelectorAll('.json-preview-block');
+  blocks.forEach(block => {
+    // ROOMS
+    const pre = block.querySelector('pre[data-json-path^="root["]');
+    const roomsCollapsed = pre?.querySelector('.open-bracket.collapsed.array[data-key="rooms"]');
+    const roomsExpanded = block.querySelector('.open-bracket.expanded.array[data-key="rooms"]');
+    const expandedRooms = block.querySelector('pre[data-json-path$=".rooms"]');
+    if (roomsCollapsed && roomsExpanded && expandedRooms) {
+      roomsCollapsed.addEventListener('click', (e) => {
+        e.stopPropagation();
+        roomsCollapsed.style.display = 'none';
+        roomsExpanded.style.display = 'inline';
+        expandedRooms.style.display = 'block';
+        restoreCommentHighlights(expandedRooms);
       });
-    });
+      roomsExpanded.addEventListener('click', (e) => {
+        e.stopPropagation();
+        roomsExpanded.style.display = 'none';
+        expandedRooms.style.display = 'none';
+        roomsCollapsed.style.display = 'inline';
+      });
+    }
+    // LINKS
+    const linksCollapsed = pre?.querySelector('.open-bracket.collapsed.object[data-key="links"]');
+    const linksExpanded = block.querySelector('.open-bracket.expanded.object[data-key="links"]');
+    const expandedLinks = block.querySelector('pre[data-json-path$=".links"]');
+    if (linksCollapsed && linksExpanded && expandedLinks) {
+      linksCollapsed.addEventListener('click', (e) => {
+        e.stopPropagation();
+        linksCollapsed.style.display = 'none';
+        linksExpanded.style.display = 'inline';
+        expandedLinks.style.display = 'block';
+        restoreCommentHighlights(expandedLinks);
+      });
+      linksExpanded.addEventListener('click', (e) => {
+        e.stopPropagation();
+        linksExpanded.style.display = 'none';
+        expandedLinks.style.display = 'none';
+        linksCollapsed.style.display = 'inline';
+      });
+    }
   });
 }
 

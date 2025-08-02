@@ -216,6 +216,9 @@ function createPropertyList(properties, container) {
     propTitle.classList.add('clickable');
     
     propTitle.onclick = () => {
+      // Add yellow border to this property-item, remove from others
+      document.querySelectorAll('.property-item').forEach(item => item.style.boxShadow = 'none');
+      propertyDiv.style.boxShadow = '0 0 0 3px yellow';
       // Switch tab UI to Content
       const tabAvail = document.getElementById('tab-availability');
       const tabContent = document.getElementById('tab-content');
@@ -225,24 +228,19 @@ function createPropertyList(properties, container) {
       }
       clearHighlights();
       jsonContainer.innerHTML = '';
-
       const heading = document.createElement('div');
       heading.className = 'json-heading';
       heading.textContent = 'Content API Response';
       jsonContainer.appendChild(heading);
-
       const pre = document.createElement('pre');
       let jsonText = JSON.stringify(contentMatch || property, null, 2);
-
       if (contentMatch) {
         const keyRegex = new RegExp(`("name"\\s*:)`, 'g');
         jsonText = jsonText.replace(keyRegex, '<span class="highlighted">$1</span>');
       }
-
       pre.innerHTML = jsonText;
       pre.classList.add('json-full');
       jsonContainer.appendChild(pre);
-
       backButton.style.display = 'inline-block';
       attachJsonCommenting(pre);
       scrollToTop();
@@ -261,6 +259,8 @@ function createPropertyList(properties, container) {
       refundP.style.color = '#007A33';
       refundP.style.margin = '4px 0';
       refundP.onclick = () => {
+        document.querySelectorAll('.property-item').forEach(item => item.style.boxShadow = 'none');
+        propertyDiv.style.boxShadow = '0 0 0 3px yellow';
         // Switch tab UI to Availability
         const tabAvail = document.getElementById('tab-availability');
         const tabContent = document.getElementById('tab-content');
@@ -290,6 +290,8 @@ function createPropertyList(properties, container) {
         nightlyP.innerHTML = `<span class="nightly-link">$${baseRate.value} nightly</span>`;
         nightlyP.classList.add('clickable');
         nightlyP.onclick = () => {
+          document.querySelectorAll('.property-item').forEach(item => item.style.boxShadow = 'none');
+          propertyDiv.style.boxShadow = '0 0 0 3px yellow';
           // Switch tab UI to Availability
           const tabAvail = document.getElementById('tab-availability');
           const tabContent = document.getElementById('tab-content');
@@ -313,6 +315,8 @@ function createPropertyList(properties, container) {
       totalP.innerHTML = `<span class="total-price-link">$${totalVal} total</span>`;
       totalP.classList.add('clickable');
       totalP.onclick = () => {
+        document.querySelectorAll('.property-item').forEach(item => item.style.boxShadow = 'none');
+        propertyDiv.style.boxShadow = '0 0 0 3px yellow';
         // Switch tab UI to Availability
         const tabAvail = document.getElementById('tab-availability');
         const tabContent = document.getElementById('tab-content');
@@ -586,6 +590,9 @@ function removeAllHighlightsInPre(pre) {
     }
     parent.removeChild(node);
   });
+  // Remove any .comment-icon spans that are not inside a .highlight-comment span (orphan icons)
+  const orphanIcons = Array.from(pre.querySelectorAll('.comment-icon')).filter(icon => !icon.closest('.highlight-comment'));
+  orphanIcons.forEach(icon => icon.remove());
 }
 
 // --- Comments Tab Logic ---
